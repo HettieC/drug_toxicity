@@ -14,4 +14,4 @@ You can install the software from [PyPi](https://pypi.org/project/drug_toxicity/
 Documentation can be found at [readthedocs](https://drugtoxicity.readthedocs.io/en/latest/).
 
 ## Issues and support
-If you encounter any issues, please contact us through the [issues](https://github.com/HettieC/DrugToxicity/issues) page.
+If you encounter any issues, please contact us through the [issues](https://github.com/HettieC/drug_toxicity/issues) page.
