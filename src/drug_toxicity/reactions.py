@@ -77,7 +77,7 @@ class Reactions:
     def aromatic_hydroxylation(cls, comp: Mol) -> list[Mol]:
         """Perform aromatic hydroxylation"""
         benzene = "[#6:1]:1:[#6:2]:[#6:3]:[#6:4]:[#6:5]:[#6:6]:1"
-        alkyl_phenol = "[#6:6](-[#8#1]):1[#6:5]:[#6:4]:[#6:3]:[#6:2]:[#6:1]:1"
+        alkyl_phenol = "cccccc"# "[#6:6]([#8#1]):1[#6:5]:[#6:4]:[#6:3]:[#6:2]:[#6:1]:1"
 
         canonicalized_smiles = Chem.MolToSmiles(comp, isomericSmiles=True)
         canonicalized_comp = Chem.MolFromSmiles(canonicalized_smiles)
