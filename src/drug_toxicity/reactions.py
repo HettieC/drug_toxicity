@@ -845,9 +845,27 @@ class Reactions:
 
         return final_substrates
 
+################### need to check acetylation hydrazine
     @classmethod
-    def acetylation_hydrazine(cls, comp: Mol) -> list[Mol]:
+    def acetylation_hydrazine_1(cls, comp: Mol) -> list[Mol]:
         """Perform acetylation of hydrazine"""
+        hydrazine = "[#7:1]-[#7:2]"
+        product = "[#7:1]-[#7:2]-[#6](=[#8])-[#6]"
+        react2 = Chem.MolFromSmarts(cls.acetyl_group)
+
+        matches = comp.GetSubstructMatches(Chem.MolFromSmarts(hydrazine))
+        final_substrates = []
+
+        if len(matches) > 0:
+            final_substrates = cls._perform_reaction(
+                comp, react2, hydrazine, cls.acetyl_group, product
+            )
+
+        return final_substrates
+    
+    @classmethod
+    def acetylation_hydrazine_2(cls, comp: Mol) -> list[Mol]:
+        """Perform acetylation of hydrazine-containing compounds"""
         hydrazine = "[#6:1]-[#7:2]-[#7:3]"
         product = "[#6:1]-[#7:2]-[#7:3]-[#6](=[#8])-[#6]"
         react2 = Chem.MolFromSmarts(cls.acetyl_group)
