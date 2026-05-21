@@ -31,6 +31,7 @@ def get_phase_i_reactions() -> Iterable[Callable]:
         Reactions.hydrolysis_amide,
         Reactions.carbonyl_reduction,
         Reactions.dehalogenation,
+        Reactions.dehydrogenation,
     ]
 
 

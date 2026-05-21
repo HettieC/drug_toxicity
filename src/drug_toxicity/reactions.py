@@ -57,6 +57,7 @@ class Reactions:
 
         return final_substrates
 
+    ## Phase I
     @classmethod
     def aliphatic_hydroxylation(cls, comp: Mol) -> list[Mol]:
         """Perform aliphatic hydroxylation"""
@@ -417,6 +418,25 @@ class Reactions:
         if len(matches) > 0:
             final_substrates = cls._perform_reaction(
                 comp, cls.water_mol, carbonyl, cls.water, alcohol
+            )
+
+        return final_substrates
+    
+    @classmethod
+    def dehydrogenation(cls, comp: Mol) -> list[Mol]:
+        """Perform dehydrogenation on carbon chain"""
+        alkane = "[#6:1]-[#6:2]"
+        alkene = "[#6:1]=[#6:2]"
+
+        canonicalized_smiles = Chem.MolToSmiles(comp, isomericSmiles=True)
+        canonicalized_comp = Chem.MolFromSmiles(canonicalized_smiles)
+
+        matches = comp.GetSubstructMatches(Chem.MolFromSmarts(alkane))
+        final_substrates = []
+
+        if len(matches) > 0:
+            final_substrates = cls._perform_reaction(
+                canonicalized_comp, cls.water_mol, alkane, cls.water, alkene
             )
 
         return final_substrates
