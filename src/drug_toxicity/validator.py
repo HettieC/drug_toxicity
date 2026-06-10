@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from urllib.error import HTTPError
 
 import pubchempy as pubchem
+from pubchempy import BadRequestError
 from molvs import standardize_smiles
 
 logger = logging.getLogger(__name__)
@@ -18,11 +18,6 @@ class Validator:
         try:
             smile_standardized = standardize_smiles(smile_string)
 
-            logger.debug(
-                "Standardized SMILES: %s",
-                smile_standardized,
-            )
-
             if smile_standardized in self._cache:
                 return True
 
@@ -32,11 +27,18 @@ class Validator:
                 as_dataframe=False,
             )
 
-            if not isinstance(compounds, list) or not compounds:
+            if not compounds:
                 return False
 
             self._cache.add(smile_standardized)
             return True
 
-        except (ValueError, HTTPError):
+        except BadRequestError:
+            logger.debug(
+                "PubChem rejected structure: %s",
+                smile_string,
+            )
+            return False
+
+        except ValueError:
             return False
