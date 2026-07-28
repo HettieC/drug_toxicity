@@ -464,10 +464,13 @@ class Reactions:
     @classmethod
     def o_glucuronidation_carboxylic_acids(cls, comp: Mol) -> list[Mol]:
         """Perform O-glucuronidation of carboxylic acids"""
-        acid = "[#6:1](=[#8])-[#8]"
-        glucuronic_acid = "[#6]-1[#6](-[#8]-[#1])-[#6](-[#8][#1])-[#6](-[#8][#1])-[#6](-[#6](=[#8])(-[#8][#1]))-[#8]-1"
-        product = "[#6:1](=[#8])-[#8]-[#6]-1[#6](-[#8]-[#1])-[#6](-[#8][#1])-[#6](-[#8][#1])-[#6](-[#6](=[#8])(-[#8][#1]))-[#8]-1"
-        react2 = Chem.MolFromSmarts(glucuronic_acid)
+        acid = "[C:1](=O)[O;H1]"
+        glucuronic_acid = "[#8:3]-[#6@H]1-[#6@@H](-[#8])-[#6@H](-[#8])-[#6@@H](-[#8])-[#6@H](-[#6](=[#8])-[#8])-[#8]-1"
+        product = "[#6:1](=[#8])-[#8:3]-[#6@H]1-[#6@@H](-[#6@H](-[#6@@H](-[#6@H](-[#8]-1)-[#6](=[#8])-[#8])-[#8])-[#8])-[#8]"
+
+        gluc_smiles = "O[C@H]1O[C@@H](C(=O)O)[C@H](O)[C@@H](O)[C@H]1O"
+        react2 = Chem.MolFromSmiles(gluc_smiles)
+        Chem.SanitizeMol(react2)
 
         matches = comp.GetSubstructMatches(Chem.MolFromSmarts(acid))
         final_substrates = []
