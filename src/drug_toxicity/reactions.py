@@ -57,6 +57,7 @@ class Reactions:
 
         return final_substrates
 
+    ## Phase I
     @classmethod
     def aliphatic_hydroxylation(cls, comp: Mol) -> list[Mol]:
         """Perform aliphatic hydroxylation"""
@@ -77,7 +78,7 @@ class Reactions:
     def aromatic_hydroxylation(cls, comp: Mol) -> list[Mol]:
         """Perform aromatic hydroxylation"""
         benzene = "[#6:1]:1:[#6:2]:[#6:3]:[#6:4]:[#6:5]:[#6:6]:1"
-        alkyl_phenol = "[#6:6](-[#8][#1]):1[#6:5]:[#6:4]:[#6:3]:[#6:2]:[#6:1]:1"
+        alkyl_phenol = "[cH:1]1[cH:2][cH:3][cH:4][cH:5][c:6]1[OH:7]"
 
         canonicalized_smiles = Chem.MolToSmiles(comp, isomericSmiles=True)
         canonicalized_comp = Chem.MolFromSmiles(canonicalized_smiles)
@@ -420,6 +421,25 @@ class Reactions:
             )
 
         return final_substrates
+    
+    @classmethod
+    def dehydrogenation(cls, comp: Mol) -> list[Mol]:
+        """Perform dehydrogenation on carbon chain"""
+        alkane = "[#6:1]-[#6:2]"
+        alkene = "[#6:1]=[#6:2]"
+
+        canonicalized_smiles = Chem.MolToSmiles(comp, isomericSmiles=True)
+        canonicalized_comp = Chem.MolFromSmiles(canonicalized_smiles)
+
+        matches = comp.GetSubstructMatches(Chem.MolFromSmarts(alkane))
+        final_substrates = []
+
+        if len(matches) > 0:
+            final_substrates = cls._perform_reaction(
+                canonicalized_comp, cls.water_mol, alkane, cls.water, alkene
+            )
+
+        return final_substrates
 
     # PhaseII
     # Glucuronidation
@@ -444,10 +464,13 @@ class Reactions:
     @classmethod
     def o_glucuronidation_carboxylic_acids(cls, comp: Mol) -> list[Mol]:
         """Perform O-glucuronidation of carboxylic acids"""
-        acid = "[#6:1](=[#8])-[#8]"
-        glucuronic_acid = "[#6]-1[#6](-[#8]-[#1])-[#6](-[#8][#1])-[#6](-[#8][#1])-[#6](-[#6](=[#8])(-[#8][#1]))-[#8]-1"
-        product = "[#6:1](=[#8])-[#8]-[#6]-1[#6](-[#8]-[#1])-[#6](-[#8][#1])-[#6](-[#8][#1])-[#6](-[#6](=[#8])(-[#8][#1]))-[#8]-1"
-        react2 = Chem.MolFromSmarts(glucuronic_acid)
+        acid = "[C:1](=O)[O;H1]"
+        glucuronic_acid = "[#8:3]-[#6@H]1-[#6@@H](-[#8])-[#6@H](-[#8])-[#6@@H](-[#8])-[#6@H](-[#6](=[#8])-[#8])-[#8]-1"
+        product = "[#6:1](=[#8])-[#8:3]-[#6@H]1-[#6@@H](-[#6@H](-[#6@@H](-[#6@H](-[#8]-1)-[#6](=[#8])-[#8])-[#8])-[#8])-[#8]"
+
+        gluc_smiles = "O[C@H]1O[C@@H](C(=O)O)[C@H](O)[C@@H](O)[C@H]1O"
+        react2 = Chem.MolFromSmiles(gluc_smiles)
+        Chem.SanitizeMol(react2)
 
         matches = comp.GetSubstructMatches(Chem.MolFromSmarts(acid))
         final_substrates = []
@@ -845,9 +868,27 @@ class Reactions:
 
         return final_substrates
 
+################### need to check acetylation hydrazine
     @classmethod
-    def acetylation_hydrazine(cls, comp: Mol) -> list[Mol]:
+    def acetylation_hydrazine_1(cls, comp: Mol) -> list[Mol]:
         """Perform acetylation of hydrazine"""
+        hydrazine = "[#7:1]-[#7:2]"
+        product = "[#7:1]-[#7:2]-[#6](=[#8])-[#6]"
+        react2 = Chem.MolFromSmarts(cls.acetyl_group)
+
+        matches = comp.GetSubstructMatches(Chem.MolFromSmarts(hydrazine))
+        final_substrates = []
+
+        if len(matches) > 0:
+            final_substrates = cls._perform_reaction(
+                comp, react2, hydrazine, cls.acetyl_group, product
+            )
+
+        return final_substrates
+    
+    @classmethod
+    def acetylation_hydrazine_2(cls, comp: Mol) -> list[Mol]:
+        """Perform acetylation of hydrazine-containing compounds"""
         hydrazine = "[#6:1]-[#7:2]-[#7:3]"
         product = "[#6:1]-[#7:2]-[#7:3]-[#6](=[#8])-[#6]"
         react2 = Chem.MolFromSmarts(cls.acetyl_group)

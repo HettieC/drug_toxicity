@@ -31,6 +31,7 @@ def get_phase_i_reactions() -> Iterable[Callable]:
         Reactions.hydrolysis_amide,
         Reactions.carbonyl_reduction,
         Reactions.dehalogenation,
+        Reactions.dehydrogenation,
     ]
 
 
@@ -58,7 +59,8 @@ def get_phase_ii_reactions() -> Iterable[Callable]:
         Reactions.methylation_thiopurines,
         Reactions.methylation_arsen,
         Reactions.acetylation_first_amines,
-        Reactions.acetylation_hydrazine,
+        Reactions.acetylation_hydrazine_1,
+        Reactions.acetylation_hydrazine_2,
         Reactions.conjugation_glycine,
         Reactions.conjugation_glutamine,
         Reactions.conjugation_taurine,
