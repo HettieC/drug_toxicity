@@ -20,6 +20,7 @@ dependencies = [
     "molvs>=0.1.1",
     "pubchempy>=1.0.4",
     "rdkit>=2025.3.6",
+    "requests>=2.32.0",
 ]
 license = "MIT"
 classifiers = [
