@@ -9,9 +9,11 @@ response format may change without notice.
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import requests
@@ -30,6 +32,23 @@ _RESULT_PATTERN = re.compile(
     r"\s*confidence score is \[(?P<score>[^\]]+)\]"
 )
 
+#: The hosted instance intermittently returns these under load - e.g. a
+#: large batch file keeping the backend busy long enough for AWS App
+#: Runner's proxy to report it as down - unrelated to the request itself.
+_RETRYABLE_STATUS_CODES = frozenset({502, 503, 504})
+
+
+def _post_with_retries(
+    url: str, *, max_retries: int, backoff_seconds: float = 5.0, **kwargs: Any
+) -> requests.Response:
+    """POST, retrying with backoff on the webserver's transient gateway errors."""
+    for attempt in range(max_retries + 1):
+        response = requests.post(url, **kwargs)  # noqa: S113 - callers always pass timeout
+        if response.status_code not in _RETRYABLE_STATUS_CODES or attempt == max_retries:
+            return response
+        time.sleep(backoff_seconds * (2**attempt))
+    return response
+
 
 @dataclass
 class FusionESPResult:
@@ -44,10 +63,12 @@ def predict(
     smiles: str,
     base_url: str = DEFAULT_URL,
     timeout: float = 60.0,
+    max_retries: int = 3,
 ) -> FusionESPResult:
     """Score one enzyme/substrate pair against the FusionESP webserver."""
-    response = requests.post(
+    response = _post_with_retries(
         f"{base_url}/predict",
+        max_retries=max_retries,
         data={"Enzyme_sequence": enzyme_sequence, "molecule_SMILES": smiles},
         timeout=timeout,
     )
@@ -71,6 +92,7 @@ def predict_file(
     file_path: str | Path,
     base_url: str = DEFAULT_URL,
     timeout: float = 300.0,
+    max_retries: int = 3,
 ) -> pd.DataFrame:
     """Score many enzyme/substrate pairs from a csv/xls/xlsx file.
 
@@ -85,21 +107,19 @@ def predict_file(
 
     if path.suffix.lower() in _CSV_SUFFIXES:
         upload_name = f"{path.stem}.xlsx"
-        upload_file = BytesIO()
-        pd.read_csv(path).to_excel(upload_file, index=False)
-        upload_file.seek(0)
+        buffer = BytesIO()
+        pd.read_csv(path).to_excel(buffer, index=False)
+        upload_content = buffer.getvalue()
     else:
         upload_name = path.name
-        upload_file = path.open("rb")
+        upload_content = path.read_bytes()
 
-    try:
-        response = requests.post(
-            f"{base_url}/pred_with_file",
-            files={"Peptide_sequences": (upload_name, upload_file)},
-            timeout=timeout,
-        )
-    finally:
-        upload_file.close()
+    response = _post_with_retries(
+        f"{base_url}/pred_with_file",
+        max_retries=max_retries,
+        files={"Peptide_sequences": (upload_name, upload_content)},
+        timeout=timeout,
+    )
     response.raise_for_status()
 
     try:
@@ -147,6 +167,7 @@ def predict_liver_metabolism(
     resolver: LiverEnzymeResolver | None = None,
     base_url: str = DEFAULT_URL,
     timeout: float = 60.0,
+    max_retries: int = 3,
 ) -> FusionESPResult:
     """Score whether `product_smiles` is a substrate of a human liver enzyme.
 
@@ -155,4 +176,6 @@ def predict_liver_metabolism(
     """
     resolver = resolver or LiverEnzymeResolver()
     sequence = resolver.resolve(enzyme)
-    return predict(sequence, product_smiles, base_url=base_url, timeout=timeout)
+    return predict(
+        sequence, product_smiles, base_url=base_url, timeout=timeout, max_retries=max_retries
+    )
