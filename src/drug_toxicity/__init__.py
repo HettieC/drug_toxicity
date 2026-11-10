@@ -16,7 +16,7 @@ from .validator import Validator
 __all__ = [
     "FusionESPResult",
     "LiverEnzymeResolver",
-    "MetabolicProduct",
+    "Metabolic,Product",
     "Predictor",
     "Validator",
     "check_health",
