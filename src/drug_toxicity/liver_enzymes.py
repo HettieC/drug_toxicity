@@ -7,11 +7,11 @@ from dataclasses import dataclass, field
 
 import requests
 
-#: Human Phase I/II drug-metabolising enzymes, mapped to the reaction
+#: Human Phase I and II drug-metabolising enzymes, mapped to the reaction
 #: categories they correspond to in :mod:`drug_toxicity.liver`. A gene often
 #: catalyses several categories (e.g. CYP3A4 both hydroxylates and
 #: N-dealkylates), so each value is a list rather than a single category.
-#: Gene symbols only - accessions are resolved live against UniProt so a
+#: Gene symbols only: accessions are resolved live against UniProt so that a
 #: stale hardcoded ID can never silently point at the wrong protein.
 LIVER_ENZYMES: dict[str, list[str]] = {
     # Phase I - cytochrome P450s
