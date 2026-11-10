@@ -58,7 +58,7 @@ class FusionESPResult:
     confidence: float
 
 
-def predict(
+def predict_esp(
     enzyme_sequence: str,
     smiles: str,
     base_url: str = DEFAULT_URL,
@@ -149,7 +149,7 @@ def check_health(base_url: str = DEFAULT_URL, timeout: float = 30.0) -> bool:
     expected response format.
     """
     try:
-        predict(
+        predict_esp(
             _HEALTH_CHECK_SEQUENCE,
             _HEALTH_CHECK_SMILES,
             base_url=base_url,
@@ -176,6 +176,6 @@ def predict_liver_metabolism(
     """
     resolver = resolver or LiverEnzymeResolver()
     sequence = resolver.resolve(enzyme)
-    return predict(
+    return predict_esp(
         sequence, product_smiles, base_url=base_url, timeout=timeout, max_retries=max_retries
     )
