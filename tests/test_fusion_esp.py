@@ -8,7 +8,7 @@ import requests
 from drug_toxicity.fusion_esp import (
     FusionESPResult,
     check_health,
-    predict,
+    predict_esp,
     predict_file,
     predict_liver_metabolism,
 )
@@ -40,7 +40,7 @@ def test_predict_parses_interaction(monkeypatch: pytest.MonkeyPatch) -> None:
         "drug_toxicity.fusion_esp.requests.post", lambda *_a, **_k: _FakeResponse(html)
     )
 
-    result = predict("SEQ", "CCO")
+    result = predict_esp("SEQ", "CCO")
 
     assert result == FusionESPResult(interacts=True, confidence=0.87)
 
@@ -54,7 +54,7 @@ def test_predict_parses_non_interaction(monkeypatch: pytest.MonkeyPatch) -> None
         "drug_toxicity.fusion_esp.requests.post", lambda *_a, **_k: _FakeResponse(html)
     )
 
-    result = predict("SEQ", "CCO")
+    result = predict_esp("SEQ", "CCO")
 
     assert result == FusionESPResult(interacts=False, confidence=1.0117804)
 
@@ -73,7 +73,7 @@ def test_predict_retries_on_bad_gateway_then_succeeds(
         "drug_toxicity.fusion_esp.requests.post", lambda *_a, **_k: responses.pop(0)
     )
 
-    result = predict("SEQ", "CCO")
+    result = predict_esp("SEQ", "CCO")
 
     assert result == FusionESPResult(interacts=True, confidence=0.87)
     assert responses == []
@@ -87,7 +87,7 @@ def test_predict_gives_up_after_max_retries(monkeypatch: pytest.MonkeyPatch) -> 
     )
 
     with pytest.raises(requests.HTTPError):
-        predict("SEQ", "CCO", max_retries=2)
+        predict_esp("SEQ", "CCO", max_retries=2)
 
 
 def test_predict_raises_on_unparseable_response(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -97,7 +97,7 @@ def test_predict_raises_on_unparseable_response(monkeypatch: pytest.MonkeyPatch)
     )
 
     with pytest.raises(ValueError, match="Could not find a prediction result"):
-        predict("SEQ", "CCO")
+        predict_esp("SEQ", "CCO")
 
 
 def test_predict_liver_metabolism_resolves_enzyme(monkeypatch: pytest.MonkeyPatch) -> None:

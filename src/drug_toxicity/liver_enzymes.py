@@ -7,47 +7,84 @@ from dataclasses import dataclass, field
 
 import requests
 
-#: Human Phase I/II drug-metabolising enzymes, mapped to the reaction
-#: categories they correspond to in :mod:`drug_toxicity.liver`. Gene symbols
-#: only - accessions are resolved live against UniProt so a stale hardcoded
-#: ID can never silently point at the wrong protein.
-LIVER_ENZYMES: dict[str, str] = {
+#: Human Phase I and II drug-metabolising enzymes, mapped to the reaction
+#: categories they correspond to in :mod:`drug_toxicity.liver`. A gene often
+#: catalyses several categories (e.g. CYP3A4 both hydroxylates and
+#: N-dealkylates), so each value is a list rather than a single category.
+#: Gene symbols only: accessions are resolved live against UniProt so that a
+#: stale hardcoded ID can never silently point at the wrong protein.
+LIVER_ENZYMES: dict[str, list[str]] = {
     # Phase I - cytochrome P450s
-    "CYP1A2": "aromatic_hydroxylation",
-    "CYP2C9": "aliphatic_hydroxylation",
-    "CYP2C19": "aliphatic_hydroxylation",
-    "CYP2D6": "aliphatic_hydroxylation",
-    "CYP2E1": "aliphatic_hydroxylation",
-    "CYP3A4": "aliphatic_hydroxylation",
-    "CYP3A5": "aliphatic_hydroxylation",
-    "FMO3": "n_oxidation",
-    "ADH1B": "alcohol_oxidation",
-    "ALDH2": "alcohol_dehydrogenation",
-    "EPHX1": "hydrolysis_epoxide",
-    "CBR1": "carbonyl_reduction",
-    "NQO1": "nitro_reduction1",
+    "CYP1A2": ["aromatic_hydroxylation", "o_dealkylation", "epoxidation"],
+    "CYP2C9": ["aliphatic_hydroxylation", "dehydrogenation"],
+    "CYP2C19": ["aliphatic_hydroxylation", "s_oxidation"],
+    "CYP2D6": ["aliphatic_hydroxylation", "o_dealkylation"],
+    "CYP2E1": ["aliphatic_hydroxylation", "dehalogenation", "phenolamine_oxidation"],
+    "CYP3A4": [
+        "aliphatic_hydroxylation",
+        "n_dealkylation",
+        "epoxidation",
+        "decarboxylation",
+    ],
+    "CYP3A5": ["aliphatic_hydroxylation"],
+    "FMO3": ["n_oxidation", "s_oxidation"],
+    "ADH1B": ["alcohol_oxidation"],
+    "ALDH2": ["alcohol_dehydrogenation"],
+    "EPHX1": ["hydrolysis_epoxide"],
+    "CBR1": ["carbonyl_reduction"],
+    "NQO1": ["nitro_reduction1", "nitro_reduction2"],
+    "MAOA": ["oxidative_deamination"],
+    "MAOB": ["oxidative_deamination"],
+    "CES1": ["hydrolysis_ester", "hydrolysis_aliphatic", "hydrolysis_amide"],
+    "CES2": ["hydrolysis_ester"],
+    "AADAC": ["deacetylation"],
     # Phase II
-    "UGT1A1": "o_glucuronidation_phenols_alcohols",
-    "UGT1A3": "n_glucuronidation_amines",
-    "UGT1A4": "n_glucuronidation_amines",
-    "UGT1A6": "o_glucuronidation_phenols_alcohols",
-    "UGT1A9": "o_glucuronidation_carboxylic_acids",
-    "UGT2B7": "o_glucuronidation_phenols_alcohols",
-    "UGT2B15": "o_glucuronidation_phenols_alcohols",
-    "SULT1A1": "sulfonation_alcohols",
-    "SULT1A3": "sulfonation_alcohols",
-    "SULT2A1": "sulfonation_alcohols",
-    "GSTA1": "gluthationylation_expoxides",
-    "GSTM1": "gluthationylation_expoxides",
-    "GSTP1": "gluthationylation_alpha_beta_unsaturated_carbonlys",
-    "GSTT1": "gluthationylation_alkyl_halides",
-    "COMT": "methylation_catechols",
-    "TPMT": "methylation_thiopurines",
-    "NNMT": "methylation_amines",
-    "NAT1": "acetylation_first_amines",
-    "NAT2": "acetylation_first_amines",
-    "GLYAT": "conjugation_glycine",
+    "UGT1A1": ["o_glucuronidation_phenols_alcohols"],
+    "UGT1A3": ["n_glucuronidation_amines"],
+    "UGT1A4": ["n_glucuronidation_amines", "n_glucuronidation_pyridine"],
+    "UGT1A6": ["o_glucuronidation_phenols_alcohols"],
+    "UGT1A9": [
+        "o_glucuronidation_carboxylic_acids",
+        "glucuronidation_alpha_diketones",
+        "glucuronidation_alkynes",
+    ],
+    "UGT2B7": ["o_glucuronidation_phenols_alcohols", "s_glucuronidation_thiols"],
+    "UGT2B10": ["n_glucuronidation_pyridine"],
+    "UGT2B15": ["o_glucuronidation_phenols_alcohols"],
+    "SULT1A1": ["sulfonation_alcohols", "sulfonation_aromatic_n_oxides"],
+    "SULT1A3": ["sulfonation_alcohols"],
+    "SULT2A1": ["sulfonation_alcohols"],
+    "GSTA1": ["gluthationylation_expoxides"],
+    "GSTM1": ["gluthationylation_expoxides"],
+    "GSTP1": [
+        "gluthationylation_alpha_beta_unsaturated_carbonlys",
+        "gluthationylation_quinone_imines",
+    ],
+    "GSTT1": ["gluthationylation_alkyl_halides"],
+    "COMT": ["methylation_catechols"],
+    "TPMT": ["methylation_thiopurines", "methylation_thiols"],
+    "NNMT": ["methylation_amines", "methylation_pyridines"],
+    "ASMT": ["methylation_hydroxyindoles"],
+    "HNMT": ["methylation_imidazoles"],
+    "AS3MT": ["methylation_arsen"],
+    "NAT1": ["acetylation_first_amines"],
+    "NAT2": ["acetylation_first_amines", "acetylation_hydrazine_1", "acetylation_hydrazine_2"],
+    "GLYAT": ["conjugation_glycine"],
+    "ACSM2B": ["conjugation_glutamine"],
+    "BAAT": ["conjugation_taurine"],
 }
+
+
+def _invert_liver_enzymes() -> dict[str, list[str]]:
+    reaction_genes: dict[str, list[str]] = {}
+    for gene, categories in LIVER_ENZYMES.items():
+        for category in categories:
+            reaction_genes.setdefault(category, []).append(gene)
+    return reaction_genes
+
+
+#: Reverse of `LIVER_ENZYMES`: reaction category -> genes that catalyse it.
+REACTION_ENZYMES: dict[str, list[str]] = _invert_liver_enzymes()
 
 _UNIPROT_ACCESSION = re.compile(
     r"^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$|^[OPQ][0-9][A-Z0-9]{3}[0-9]$"
@@ -99,9 +136,9 @@ class LiverEnzymeResolver:
             f"{_UNIPROT_BASE_URL}/search",
             params={
                 "query": f"gene:{gene_symbol} AND organism_id:9606 AND reviewed:true",
-                "fields": "accession",
+                "fields": "accession,gene_primary",
                 "format": "json",
-                "size": 1,
+                "size": 5,
             },
             timeout=self.timeout,
         )
@@ -111,6 +148,15 @@ class LiverEnzymeResolver:
         if not results:
             msg = f"No reviewed human UniProt entry found for gene {gene_symbol!r}"
             raise ValueError(msg)
+
+        # UniProt's `gene:` query also matches historical/alternate symbols
+        # (e.g. "CES1" is a legacy HGNC synonym for MT2A), so prefer the
+        # entry whose *current* primary gene name is an exact match.
+        for result in results:
+            genes = result.get("genes", [{}])
+            primary_gene = genes[0].get("geneName", {}).get("value", "")
+            if primary_gene.upper() == gene_symbol.upper():
+                return result["primaryAccession"]
 
         return results[0]["primaryAccession"]
 

@@ -10,12 +10,13 @@ from .fusion_esp import (
     predict_liver_metabolism,
 )
 from .liver_enzymes import LiverEnzymeResolver
-from .predictor import Predictor, predict_products
+from .predictor import MetabolicProduct, Predictor, predict_products
 from .validator import Validator
 
 __all__ = [
     "FusionESPResult",
     "LiverEnzymeResolver",
+    "Metabolic,Product",
     "Predictor",
     "Validator",
     "check_health",
